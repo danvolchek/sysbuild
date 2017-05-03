@@ -20,16 +20,21 @@ class LiveEdit {
         // as well as on the runtime.
         SysGlobalObservables.focusTerm(this.runtime.focusTerm.bind(this.runtime));
         SysGlobalObservables.runCode(this.runCode.bind(this));
+        SysGlobalObservables.sendKeys(this.sendKeys.bind(this));
     }
 
     escapeHtml(unsafe) {
         // stackoverflow.com/questions/6234773/
         return unsafe
-             .replace(/&/g, '&amp;')
-             .replace(/</g, '&lt;')
-             .replace(/>/g, '&gt;')
-             .replace(/"/g, '&quot;')
-             .replace(/'/g, '&#039;');
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    sendKeys(tty, keys) {
+        this.runtime.sendKeys(tty, keys);
     }
 
     processGccCompletion(result) {
@@ -65,7 +70,14 @@ class LiveEdit {
 
         if (result.exitCode === 0) {
             SysGlobalObservables.compileStatus(result.stats.warning > 0 ? 'Warnings' : 'Success');
-            this.runtime.sendExecCmd(SysGlobalObservables.execCmd());
+
+            const execDone = (results) => {
+                SysGlobalObservables.lastProgramOutput(results.programOutput);
+                SysGlobalObservables.lastProgramExitCode(results.exitCode);
+                SysGlobalObservables.lastProgramOutput.valueHasMutated();
+            };
+
+            this.runtime.sendExecCmd(SysGlobalObservables.execCmd(), execDone);
         } else {
             SysGlobalObservables.compileStatus('Failed');
         }

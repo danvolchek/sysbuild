@@ -19,14 +19,24 @@ class SysRuntime {
         this.captureOutput = false;
         this.compileTicket = 0;
 
+        this.executeTicket = 0;
+        this.programOutput = '';
+        this.captureProgramOutput = false;
+
         this.gccOutputCaptureRe = /###GCC_COMPILE###\s*([\S\s]*?)\s*###GCC_COMPILE_FINISHED###/;
         this.gccExitCodeCaptureRe = /GCC_EXIT_CODE: (\d+)/;
+
+        this.programOutputCaptureRe = /###PROGRAM_EXEC###\s*([\S\s]*?)\s*###PROGRAM_EXEC_FINISHED###/;
+        this.programExitCodeCaptureRe = /PROGRAM_EXIT_CODE: (\d+)/;
+        this.programPWDCaptureRe = /###PWD_START###\s*([\S\s]*?)\s*###PWD_END###/;
 
         // Set up callbacks
         this.putCharTTY0Listener = (character) => {
             // capture output from tty0
             if (this.captureOutput) {
                 this.ttyOutput += character;
+            } else if (this.captureProgramOutput) {
+                this.programOutput += character;
             }
             this.notifyListeners('putchar-tty0', character);
         };
@@ -98,8 +108,7 @@ class SysRuntime {
                     'usr/bin/as',
                     'usr/include/stdio.h',
                 ], // list of files which should be loaded immediately after they appear in the filesystem
-                lazyloadimages: [
-                ], // list of automatically loaded images after the basic filesystem has been loaded
+                lazyloadimages: [], // list of automatically loaded images after the basic filesystem has been loaded
             },
             terms: [termTTY0, termTTY1],   // canvas ids for the terminals
             statsid: 'vm-stats',  // element id for displaying VM statistics
@@ -139,6 +148,7 @@ class SysRuntime {
 
         this.ttyOutput = '';
         this.captureOutput = true;
+        this.captureProgramOutput = false;
         ++this.compileTicket;
 
         const compileCb = (completed) => {
@@ -222,7 +232,7 @@ class SysRuntime {
         });
     }
 
-    sendExecCmd(cmd) {
+    sendExecCmd(cmd, guiCallback) {
         if (!cmd) {
             return;
         }
@@ -231,7 +241,47 @@ class SysRuntime {
         }
         cmd = cmd.replace('\\', '\\\\').replace('\n', '\\n');
         // Don't \x03 ; it interrupts the clear command
-        this.sendKeys('tty0', '\n' + cmd + '\n');
+
+        this.captureProgramOutput = true;
+
+        ++this.executeTicket;
+
+        const self = this;
+
+        const executeCB = (completed) => {
+            let result = null;
+            this.expecting = undefined;
+            if (completed) {
+                this.captureProgramOutput = false;
+                const regexMatchArray = this.programOutputCaptureRe.exec(this.programOutput);
+                let programOutput = regexMatchArray[1];
+                const programExitCode = parseInt(this.programExitCodeCaptureRe.exec(programOutput)[1], 10);
+                let programPWD = this.programPWDCaptureRe.exec(programOutput)[1].split('\n');
+                programPWD = programPWD[0].replace('/home/user', '~') + ' $ ' + programPWD[1];
+
+                programOutput = programOutput.replace(this.programExitCodeCaptureRe, '').slice(0, -1);
+                programOutput = programOutput.replace(this.programPWDCaptureRe, '').slice(1);
+                this.programOutput = '';
+
+                result = {
+                    exitCode: programExitCode,
+                    programOutput: programOutput
+                };
+
+                const sendProg = programOutput === '' ? '' : programOutput + '\n';
+
+                self.sendKeys('tty0', 'clear && printf \'' + programPWD + '\n' + sendProg + '\'\n');
+            }
+
+            guiCallback(result);
+        };
+
+
+        const nCmd = 'echo \\#\\#\\#PROGRAM_EXEC\\#\\#\\#;clear;echo \\#\\#\\#PWD_START\\#\\#\\#;pwd;echo ' + cmd + ';echo \\#\\#\\#PWD_END\\#\\#\\#;' + cmd + '; echo PROGRAM_EXIT_CODE: $?; echo \\#\\#\\#PROGRAM_EXEC_FINISHED\\#\\#\\#' +
+            this.executeTicket + '.;clear\n';
+
+
+        this.expecting = this.sendKeys('tty0', nCmd, 'PROGRAM_EXEC_FINISHED###' + this.executeTicket + '.', executeCB);
     }
 
     // Used to broadcast 'putchar' and 'ready' events

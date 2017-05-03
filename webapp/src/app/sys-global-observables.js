@@ -6,6 +6,8 @@ export const compileStatus = ko.observable('');
 export const focusTerm = ko.observable((tty) => {});
 export const runCode = ko.observable((gccOptions) => {});
 
+export const sendKeys = ko.observable((tty, keys) => {});
+
 export const buildCmd = ko.observable('');
 export const execCmd = ko.observable('');
 
@@ -26,3 +28,6 @@ export const fileBrowser = {};
 
 export const observableFS = ko.observable('');
 export const observableEditor = ko.observable('');
+
+export const lastProgramExitCode = ko.observable(0);
+export const lastProgramOutput = ko.observable('');

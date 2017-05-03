@@ -1,0 +1,19 @@
+<div id="test-container">
+  <h2 id="test-header">Tests:</h2>
+  <h4>Status: <span data-bind="text: testStatus"></span></h4>
+  <h4 data-bind="visible: executed">Exit Code: <span data-bind="text: exitCode"></span></h4>
+  <table id="test-table">
+    <thead>
+    <tr>
+      <th class='test-th'>Test Name</th>
+      <th class='test-th'>Status</th>
+    </tr>
+    </thead>
+    <tbody data-bind="foreach: tests">
+    <tr>
+      <td class='test-td' data-bind="text: name"></td>
+      <td class='test-td' data-bind="text: status_readable, style: { 'background-color': status_color() }"></td>
+    </tr>
+    </tbody>
+  </table>
+</div>

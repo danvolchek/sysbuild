@@ -592,6 +592,7 @@ class Filebrowser {
     }
 
     saveActiveFile() {
+        console.log(this.editor);
         const editorContent = this.editor.getText();
         const itemData = this.metaDataPathLookUp[this.activePath];
 

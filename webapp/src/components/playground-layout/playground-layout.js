@@ -49,6 +49,7 @@ class PlaygroundLayout {
         this.createEditorTab(editorParams, compilerParams);
         this.createFileBrowserTab();
         this.createManPageSearchTab(openManPageCallback);
+        this.createTestStatusTab(compilerParams);
     }
 
     createEditorTab(editorParams, compilerParams) {
@@ -96,6 +97,17 @@ class PlaygroundLayout {
             closable: false,
             component: {
                 name: 'file-browser'
+            }
+        });
+    }
+
+    createTestStatusTab(compilerParams) {
+        this.editorPaneTabs.push({
+            title: 'Tests',
+            closable: false,
+            icon: 'list-alt',
+            component: {
+                name: 'test-status-tab'
             }
         });
     }

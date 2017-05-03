@@ -54,6 +54,7 @@ const requireJsOptimizerFilesConfig = [
             'components/compiler-state-label/compiler-state-label',
             'components/not-found-page/not-found-page',
             'components/file-browser/file-browser',
+            'components/test-status-tab/test-status-tab',
             'ace/ext/modelist',
             'ace/mode/c_cpp',
             'ace/mode/makefile',
