@@ -9,7 +9,7 @@ class TestStatusTab {
         this.exitCode = SysGlobalObservables.lastProgramExitCode;
 
         this.tests = ko.observableArray([
-            new this.Test('Output is exactly \'Hello World!\'', /Hello World!/, null, null),
+            new this.Test('Output is exactly \'Hello World!\'', /^Hello World!$/, null, null),
             new this.Test('Exit Code is 0', null, { exitVal: 0, checkType: 'equals' }, null)
         ]);
 
