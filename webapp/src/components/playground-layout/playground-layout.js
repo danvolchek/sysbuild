@@ -8,6 +8,8 @@ class PlaygroundLayout {
         this.showLessonNavigation = !!this.activityData; // coerce to boolean
         this.editorPaneTabs = ko.observableArray();
 
+        console.log(this.activityData);
+
         this.docParams = params.docParams;
         this.vmState = params.vmParams.vmState;
         const compilerParams = params.compilerParams;
@@ -49,7 +51,8 @@ class PlaygroundLayout {
         this.createEditorTab(editorParams, compilerParams);
         this.createFileBrowserTab();
         this.createManPageSearchTab(openManPageCallback);
-        this.createTestStatusTab(compilerParams);
+        if(this.activityData)
+            this.createTestStatusTab();
     }
 
     createEditorTab(editorParams, compilerParams) {
@@ -101,7 +104,7 @@ class PlaygroundLayout {
         });
     }
 
-    createTestStatusTab(compilerParams) {
+    createTestStatusTab() {
         this.editorPaneTabs.push({
             title: 'Tests',
             closable: false,
