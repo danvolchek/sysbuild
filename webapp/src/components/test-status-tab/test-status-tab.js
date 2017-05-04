@@ -7,6 +7,7 @@ class TestStatusTab {
         this.testStatus = ko.observable('Not Yet Executed - Click \'Run It\' in the Code tab!');
         this.executed = ko.observable(false);
         this.exitCode = SysGlobalObservables.lastProgramExitCode;
+        this.numTestsPassed = ko.observable('');
 
         this.tests = ko.observableArray([
             new this.Test('Output is exactly \'Hello World!\'', /^Hello World!$/, null, null),
@@ -45,6 +46,8 @@ class TestStatusTab {
     }
 
     checkTests(programOutput, programExitCode) {
+        let numPassed = 0;
+        let total = 0;
         ko.utils.arrayForEach(this.tests(), (test) => {
             let passed = true;
 
@@ -63,8 +66,14 @@ class TestStatusTab {
                     }
                 }
             }
+            if (passed) {
+                numPassed++;
+            }
+            total++;
             test.status(passed);
         });
+
+        this.numTestsPassed(numPassed + '/' + total);
     }
 
     dispose() {
